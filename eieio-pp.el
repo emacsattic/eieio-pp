@@ -81,8 +81,15 @@ this object."
 	      (princ (symbol-name i))
 	      (if (car publp)
 		  ;; Use our public printer
-		  (funcall (car publp) v)
+		  (progn
+		    (princ " ")
+		    (funcall (car publp) v))
 		;; Use our generic override prin1 function.
+		(if (or (eieio-object-p v)
+			(and (listp v)
+			     (eieio-object-p (car v))))
+		    (princ "\n")
+		  (princ " "))
 		(eieio-override-prin1 v)))))
 	(setq publa (cdr publa) publd (cdr publd)
 	      publp (cdr publp))))
@@ -92,7 +99,6 @@ this object."
 
 (defun eieio-override-prin1 (thing)
   "Perform a `prin1' on THING taking advantage of object knowledge."
-  (princ (if (eieio-object-p thing) "\n" " "))
   (cond ((eieio-object-p thing)
 	 (object-write thing))
 	((class-p thing)
@@ -112,12 +118,14 @@ this object."
       (progn
 	(princ "'")
 	(prin1 list))
+    (princ (make-string (* eieio-print-depth 2) ? ))
     (princ "(list")
-    (if (eieio-object-p (car list)) (princ "\n "))
     (let ((eieio-print-depth (1+ eieio-print-depth)))
       (while list
+	(princ "\n")
 	(if (eieio-object-p (car list))
 	    (object-write (car list))
+	  (princ (make-string (* eieio-print-depth 2) ? ))
 	  (eieio-override-prin1 (car list)))
 	(setq list (cdr list))))
     (princ ")")))
