@@ -54,12 +54,17 @@ this object."
     (princ "\n"))
   (let* ((cl (object-class this))
 	 (cv (class-v cl)))
+    ;; Now output readable lisp to recreate this object
+    ;; It should look like this:
+    ;; (<constructor> <name> <slot> <slot> ... )
+    ;; Each slot's slot is writen using its :writer.
     (princ (make-string (* eieio-print-depth 2) ? ))
     (princ "(")
     (princ (symbol-name (class-constructor (object-class this))))
     (princ " \"")
     (princ (object-name-string this))
     (princ "\"")
+    ;; Loop over all the public slots
     (let ((publa (aref cv class-public-a))
 	  (publd (aref cv class-public-d))
 	  (publp (aref cv class-public-printer))
@@ -67,14 +72,17 @@ this object."
       (while publa
 	(when (slot-boundp this (car publa))
 	  (let ((i (class-slot-initarg cl (car publa)))
-		(v (eieio-oref this (car publa))))
+		(v (eieio-oref this (car publa)))
+		)
 	    (unless (or (not i) (equal v (car publd)))
 	      (unless (looking-back "\n")
 		(princ "\n"))
 	      (princ (make-string (* eieio-print-depth 2) ? ))
 	      (princ (symbol-name i))
 	      (if (car publp)
+		  ;; Use our public printer
 		  (funcall (car publp) v)
+		;; Use our generic override prin1 function.
 		(eieio-override-prin1 v)))))
 	(setq publa (cdr publa) publd (cdr publd)
 	      publp (cdr publp))))
@@ -84,24 +92,18 @@ this object."
 
 (defun eieio-override-prin1 (thing)
   "Perform a `prin1' on THING taking advantage of object knowledge."
+  (princ (if (eieio-object-p thing) "\n" " "))
   (cond ((eieio-object-p thing)
-	 (princ "\n")
 	 (object-write thing))
 	((listp thing)
-	 (princ " ")
 	 (eieio-list-prin1 thing))
 	((class-p thing)
-	 (princ " ")
 	 (princ (class-name thing)))
 	((or (keywordp thing) (not thing))
-	 (princ " ")
 	 (prin1 thing))
 	((symbolp thing)
-	 (princ " '")
-	 (princ (symbol-name thing)))
-	(t
-	 (princ " ")
-	 (prin1 thing))))
+	 (princ (concat "'" (symbol-name thing))))
+	(t (prin1 thing))))
 
 (defun eieio-list-prin1 (list)
   "Display LIST where list may contain objects."
@@ -110,17 +112,14 @@ this object."
 	(princ "'")
 	(prin1 list))
     (princ "(list")
-    (when (eieio-object-p (car list))
-      (princ "\n"))
-    (let ((eieio-print-depth (1+ eieio-print-depth))
-	  thing)
+    (if (eieio-object-p (car list)) (princ "\n "))
+    (let ((eieio-print-depth (1+ eieio-print-depth)))
       (while list
-	(setq thing (car list))
-	(if (eieio-object-p thing)
-	    (object-write thing)
-	  (unless (or (keywordp thing) (not thing))
+	(if (eieio-object-p (car list))
+	    (object-write (car list))
+	  (unless (or (keywordp (car list)) (not (car list)))
 	    (princ "'"))
-	  (prin1 thing))
+	  (prin1 (car list)))
 	(setq list (cdr list))))
     (princ ")")))
 
