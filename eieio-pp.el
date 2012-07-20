@@ -118,9 +118,7 @@ this object."
       (while list
 	(if (eieio-object-p (car list))
 	    (object-write (car list))
-	  (unless (or (keywordp (car list)) (booleanp (car list)))
-	    (princ "'"))
-	  (prin1 (car list)))
+	  (eieio-override-prin1 (car list)))
 	(setq list (cdr list))))
     (princ ")")))
 
