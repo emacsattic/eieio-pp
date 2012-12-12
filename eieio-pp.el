@@ -4,7 +4,7 @@
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Created: 20120118
-;; Version: 0.2.0
+;; Version: 1.1.0
 ;; Homepage: https://github.com/tarsius/eieio-pp
 ;; Keywords: OO, lisp
 
@@ -27,6 +27,10 @@
 
 ;; Prettier pretty-printing for EIEIO.
 
+;; The functions redefined here have been merged into the trunk
+;; branch of the Emacs repository.  These changes will be released
+;; with Emacs-24.4.
+
 ;; This library REDEFINES functions DEFINED IN `eieio.el':
 ;;
 ;; - `object-write'(eieio-default-superclass)
@@ -39,6 +43,9 @@
 ;;; Code:
 
 (require 'eieio)
+
+(when (version<= "24.3.50" emacs-version)
+  (message "Library eieio-pp isn't required when using Emacs >= 24.3.50"))
 
 (defmethod object-write ((this eieio-default-superclass) &optional comment)
   "Write object THIS out to the current stream.
@@ -61,9 +68,9 @@ this object."
     (princ (make-string (* eieio-print-depth 2) ? ))
     (princ "(")
     (princ (symbol-name (class-constructor (object-class this))))
-    (princ " \"")
-    (princ (object-name-string this))
-    (princ "\"")
+    (princ " ")
+    (prin1 (object-name-string this))
+    (princ "\n")
     ;; Loop over all the public slots
     (let ((publa (aref cv class-public-a))
 	  (publd (aref cv class-public-d))
@@ -75,7 +82,7 @@ this object."
 		(v (eieio-oref this (car publa)))
 		)
 	    (unless (or (not i) (equal v (car publd)))
-	      (unless (looking-back "\n")
+	      (unless (bolp)
 		(princ "\n"))
 	      (princ (make-string (* eieio-print-depth 2) ? ))
 	      (princ (symbol-name i))
@@ -85,11 +92,9 @@ this object."
 		    (princ " ")
 		    (funcall (car publp) v))
 		;; Use our generic override prin1 function.
-		(if (or (eieio-object-p v)
-			(and (listp v)
-			     (eieio-object-p (car v))))
-		    (princ "\n")
-		  (princ " "))
+		(princ (if (or (eieio-object-p v)
+                               (eieio-object-p (car-safe v)))
+                           "\n" " "))
 		(eieio-override-prin1 v)))))
 	(setq publa (cdr publa) publd (cdr publd)
 	      publp (cdr publp))))
@@ -101,13 +106,12 @@ this object."
   "Perform a `prin1' on THING taking advantage of object knowledge."
   (cond ((eieio-object-p thing)
 	 (object-write thing))
+	((consp thing)
+	 (eieio-list-prin1 thing))
 	((class-p thing)
 	 (princ (class-name thing)))
-	((or (keywordp thing)
-	     (booleanp thing))
+	((or (keywordp thing) (booleanp thing))
 	 (prin1 thing))
-	((listp thing)
-	 (eieio-list-prin1 thing))
 	((symbolp thing)
 	 (princ (concat "'" (symbol-name thing))))
 	(t (prin1 thing))))
