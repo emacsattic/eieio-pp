@@ -1,11 +1,11 @@
 ;;; eieio-pp.el --- prettier pretty-printing for eieio
 
-;; Copyright (C) 2012  Jonas Bernoulli
+;; Copyright (C) 2012-2013  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Created: 20120118
-;; Version: 1.1.0
-;; Homepage: https://github.com/tarsius/eieio-pp
+;; Version: 1.1.1
+;; Homepage: https://github.com/emacsattic/eieio-pp
 ;; Keywords: OO, lisp
 
 ;; This file is not part of GNU Emacs.
@@ -25,11 +25,12 @@
 
 ;;; Commentary:
 
-;; Prettier pretty-printing for EIEIO.
+;;    The functions redefined here have been merged into the trunk
+;;    branch of the Emacs repository.  These changes will be released
+;;    with Emacs-24.4.  See
+;;    https://github.com/emacsmirror/emacs/commit/ccf53c29776da56d7ec391db315f29e89720b8e4
 
-;; The functions redefined here have been merged into the trunk
-;; branch of the Emacs repository.  These changes will be released
-;; with Emacs-24.4.
+;; Prettier pretty-printing for EIEIO.
 
 ;; This library REDEFINES functions DEFINED IN `eieio.el':
 ;;
